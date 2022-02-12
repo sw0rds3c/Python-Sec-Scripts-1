@@ -1,0 +1,143 @@
+'''
+Script:  Week 3 Scripting Assignment
+Author:  Mike Sword
+Date:    Feb 2021
+Version: .007
+Purpose: Directory Metadata and Hashing
+
+ASSIGNMENT DETAILS
+Create a new script with the following requirements:
+Allow the user to specify a starting directory using the built-in Python input() function
+
+Using os.walk()
+Acquire the following information for each file (sub-directories included):
+File Path (absolute path)
+File Size
+MAC Times (in human readable form)
+SHA-256 Hash value
+
+Store the results in a prettytable with the headings:
+AbsPath, FileSize, LastModified, LastAccess, CreatedTime, HASH
+
+Display the prettytable sorted by FileSize
+Catch and report any errors
+
+Submit:
+1) Your final script
+2) A screenshot from within WingIDE of a successful execution
+    
+'''
+
+''' IMPORT STANDARD LIBRARIES '''
+import os       # File System Methods
+import sys      # System Methods
+import time     # Time Conversion Methods
+import hashlib  # Python standard library hashlib
+
+
+''' IMPORT 3RD PARTY LIBRARIES '''
+from prettytable import PrettyTable # pip install prettytable
+
+''' DEFINE PSEUDO CONSTANTS '''
+#Change to directory as required
+DIR = "c:/users/administrator/desktop/cybv312 sp21"
+
+''' LOCAL FUNCTIONS '''
+
+def GetFileMetaData(fileName):
+    ''' 
+        obtain filesystem metadata
+        from the specified file
+        specifically, fileSize and MAC Times
+        
+        return True, None, fileSize and MacTimeList
+    '''
+    try:
+        metaData         = os.stat(fileName)       # Use the stat method to obtain meta data
+        fileSize         = metaData.st_size         # Extract fileSize and MAC Times
+        timeLastAccess   = metaData.st_atime
+        timeLastModified = metaData.st_mtime
+        timeCreated      = metaData.st_ctime
+        
+        macTimeList = [timeLastModified, timeLastAccess, timeCreated] # Group the MAC Times in a List
+        return True, None, fileSize, macTimeList
+    
+    except Exception as err:
+        return False, str(err), None, None
+
+''' LOCAL CLASSES '''
+# NONE
+
+''' MAIN ENTRY POINT '''
+
+if __name__ == '__main__':
+    
+    print("\nWK-3 Solution: Mike Sword - Version One\n")
+    print("Second Script: File Meta Data & Hash in PrettyTable\n")    
+    
+    DIR = input('Enter a Directory Path to Process i.e. c:/ >>> ')
+        # Confirm directory used as input
+    print("Directory for processing: ", DIR)
+    
+    tbl = PrettyTable(['FilePath','FileSize','Time Modified','Time Accessed','Time Created','SHA-256 Hash Value'])
+        
+    try:       
+        # Perform the os.walk, starting at the target directory   
+        for root, dirs, fileList in os.walk(DIR):
+            # Print current Root directory
+            print('root: ', root)
+            # Print current directory
+            print('dirs: ', dirs)
+            # Print file list
+            print('files: ', fileList)
+            
+            # For each of the files in the file list, do the following:
+            for nextFile in fileList: 
+                # Get the absolute path of the file--to be used for reporting and getting the file hash
+                path = os.path.join(root, nextFile)
+                absPath = os.path.abspath(path)
+                # Call the GetFileMetadata function (from week 2)
+                success, errInfo, fileSize, macList = GetFileMetaData(absPath)
+                
+                # Open each file in read binary mode
+                with open(absPath, 'rb') as targetFile:
+                    # Read the contents of the file and get the file hash
+                    fileContents = targetFile.read()
+                    sha256Obj = hashlib.sha256()
+                    sha256Obj.update(fileContents)
+                    hexDigest = sha256Obj.hexdigest()
+                    
+                    modTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[0]))
+                    accTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[1]))
+                    creTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[2]))
+                    
+                    # Print stats for each file encountered
+                    print("File name: ", absPath)
+                    print("Hex digest: ", hexDigest)
+                    print("Modified Time: ", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[0])))
+                    print("Accessed Time: ", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[1])))
+                    print("Created Time: ", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(macList[2])))
+                    print("File size: ", fileSize)
+                    
+                    print("="*60)
+                    
+                    for eachFile in fileList:
+                        filePath = os.path.join(DIR, eachFile)
+                        if os.path.isfile(filePath):
+                            fileSize = os.path.getsize(filePath)
+                            tbl.add_row( [ filePath, fileSize, modTime, accTime, creTime, hexDigest] )                  
+                    
+                    # Format the table - left align
+                    tbl.align = "l" 
+                    
+                    # Sort the table based on file size (descending)
+                    # Store your formatted values in a sorted variable resultString
+                    resultString = tbl.get_string(sortby="FileSize", reversesort=True)
+                    print(resultString)       
+
+                    print("="*60)                    
+       
+    except Exception as err:
+        print("\n\nScript Aborted     ", "Exception =     ", err)        
+    
+    print("Script end")
