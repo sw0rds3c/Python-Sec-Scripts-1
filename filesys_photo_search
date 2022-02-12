@@ -1,0 +1,86 @@
+'''
+Script:  Week 7 Assignment
+Author:  Mike Sword
+Date:    Feb 2021
+Version: .007
+Purpose: Searches filesystem for photos and dumps info to csv and json.
+'''
+
+# Import Libraries
+import sys
+import os
+import csv
+import json 
+from prettytable import PrettyTable
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
+
+
+# Psuedos
+DIR = input("Enter directory: ")
+'''c:/users/administrator/desktop/cybv312 sp21/week7'''
+
+'''
+1
+'''
+
+# Photo Search
+
+cnt = 0 # Files processed
+photoDict = {}
+tbl = PrettyTable(['File', 'Ext', 'Format', 'Width', 'Height', 'Mode', 'ERR'])
+fileList = os.walk(DIR)
+    
+
+for currentRoot, dirList, fileList in os.walk(DIR):
+    
+    outFile0write = open("results.csv", 'w', newline='')
+        
+    reportWriter = csv.writer(outFile0write, delimiter=',', quotechar='"')
+    heading = ['File', 'Ext', 'Format', 'Width', 'Height', 'Mode', 'ERR']
+    reportWriter.writerow([fld for fld in heading])   # Write Heading
+    pass
+    
+    outFile1write = open("photo.json", "w")    
+    
+    for nextFile in fileList:     
+        
+        fullPath = os.path.join(currentRoot, nextFile)
+        absPath = os.path.abspath(fullPath)    
+        if os.path.isfile(absPath):
+            
+            cnt += 1
+            ext = os.path.splitext(absPath)[1]
+
+            
+            try:
+                                  
+                
+                with Image.open(absPath) as im:
+                    if (im.format.upper() == ext[1:].upper()) or (im.format == 'JPEG' and ext.lower() == '.jpg'):
+                        error1 = ' '
+                    else:
+                        error1 = '*'
+                        
+                        
+                    tbl.add_row([absPath, ext, im.format, im.size[0], im.size[1], im.mode, error1]) 
+                        
+                    reportWriter.writerow([absPath, ext, im.format, im.size[0], im.size[1], im.mode, error1])
+                    photoDict[absPath] = [ext, im.format, im.size[0], im.size[1], im.mode, error1]  
+                
+                    
+            except Exception as err:
+                tbl.add_row([absPath, ext, "[NA]", "[NA]", "[NA]", "[NA]", "[NA]"])  
+                
+                reportWriter.writerow([absPath, ext, "[NA]", "[NA]", "[NA]", "[NA]", "[NA]"])
+                photoDict[absPath] = [ext, "[NA]", "[NA]", "[NA]", "[NA]", "[NA]"]
+                             
+        else:
+            continue
+        
+    json.dump(photoDict, outFile1write, indent=4)
+
+print("Files Processed: ", '{:,}'.format(cnt))
+tbl.align = 'l'
+print(tbl.get_string(sortby="ERR"))
+print("\nScript Complete!\n")
