@@ -1,0 +1,72 @@
+'''
+Script:  Week 5 Assignment
+Author:  Mike Sword
+Date:    Feb 2021
+Version: .007
+Purpose: Making a "Dynamic" Rainbow Table
+'''
+
+''' Libraries ''' 
+
+import itertools as iT    # Library to run through all combinations, permutations, and products of a password
+import pickle as pK       # Library to serialize objects to store or transmit data to mem, db, file, etc.
+import hashlib as hL      # Hashing Library
+from prettytable import PrettyTable as pT     # pip install prettytable
+
+''' 
+-- Directions For Assignment --
+
+1. Using the following limited string of characters 'abc123&&'
+   Create a "dynamic" rainbow table of all passwords 4 to 7 characters in length, along with the md5 hash of each password.  --done
+2. Store them into a Python dictionary. --done
+3. Serialize the resulting table and store it in a file 'rainbow.db' --done
+4. Display the first 5 and last 5 entries in the dictionary along with the length of the dictionary. --done
+
+'''
+
+# Creates file for db dump destination (write binary) labeled 'rainbow.db'
+pKFileWrite = open('rainbow.db', 'wb')
+
+# Creates an empy dictionary
+rainbowTable = {}
+
+# Creates Rainbow Table
+for variations in range(4,8):
+    for pwTuple in iT.product("abc123&&", repeat=variations):
+        pw = ""
+        md5Hash = hL.md5()
+        for eachChr in pwTuple:
+            pw = pw+"".join(eachChr)
+        pw = bytes(pw, 'ascii')
+        md5Hash.update(pw)
+        md5Digest = md5Hash.hexdigest()
+        rainbowTable[md5Digest] = pw
+
+print("_" * 60, "\n")      
+print("Length of Dictionary: ", len(rainbowTable), " -- Different Pairs of MD5 Hash and Plain-Text Combos", "\n")
+print("_" * 60, "\n")  
+
+
+#serialize the list and DUMP to file
+print("Serializing the list and dumping to rainbow.db file ---> ")
+pK.dump(rainbowTable, pKFileWrite)                      
+pKFileWrite.close() 
+
+# Open the pickle file (read binary)
+pKFileRead = open('rainbow.db', 'rb')
+
+# LOAD the serialized data into a list + print
+print("\nLoading the pickled list\n")
+retrievedList = pK.load(pKFileRead)
+print("_" * 60, "\n") 
+
+firstfiveList = list(retrievedList.items())[:5]
+lastfiveList = list(retrievedList.items())[-5:]
+
+# Display the retrieved List's first & last five entries
+print("FIRST FIVE Entries for the Recovered List:    ", "\n" * 3, firstfiveList, "\n" * 3, "LAST FIVE Entries for the Recovered List:    ", "\n" * 3, lastfiveList)
+
+# Close file and End
+pKFileRead.close()
+
+print("\n\n\n------ END OF SCRIPT ------")
