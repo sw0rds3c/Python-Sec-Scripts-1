@@ -1,0 +1,116 @@
+'''
+Script:  Week 4 Assignment
+Author:  Mike Sword
+Date:    Feb 2021
+Version: .007
+Purpose: Combining week3 material with searching from user input (based on file type, size, and hash value)
+'''
+
+''' STANDARD LIBRARIES ''' 
+import os       # File System Methods
+import sys      # System Methods
+import time     # Time Conversion Methods
+import hashlib  # Python standard library hashlib
+
+
+
+''' 3rd Party Libraries '''
+from prettytable import PrettyTable     # pip install prettytable
+
+
+
+''' Psuedo Constants '''
+DIR = input("Enter directory: ")
+extSearch = input("Enter a File Extension to match: ")
+pathSearch = input("Enter a Filename to match: ")
+hashSearch = input("Enter a hash value to match: ")
+
+
+
+''' Local Functions '''
+def GetFileMetaData(fileName):
+    
+    ''' 
+        obtain filesystem metadata
+        from the specified file
+        specifically, fileSize and MAC Times
+        
+        return True, None, fileSize and MacTimeList
+    '''
+    
+    try:
+        
+        metaData         = os.stat(fileName)       # Use the stat method to obtain meta data
+        fileSize         = metaData.st_size         # Extract fileSize and MAC Times
+        timeLastAccess   = metaData.st_atime
+        timeLastModified = metaData.st_mtime
+        timeCreated      = metaData.st_ctime
+        
+        modTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeLastModified))
+        accTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeLastAccess))               
+        creTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeCreated))
+        
+        macTimeList = [modTime, accTime, creTime] # Group the MAC Times in a List
+        
+        return True, None, fileSize, macTimeList
+    
+    except Exception as err:
+        return False, str(err), None, None
+
+
+
+''' Start of Main '''
+print("Walking: ", DIR, "\n")
+print("Searching for: ")
+print("\tPath: ", pathSearch)
+print("\tExt:  ", extSearch)
+print("\tHash: ", hashSearch)
+
+#creates pretty table with appropriate column headings
+tbl = PrettyTable(['HASHMATCH', 'EXTMATCH', 'PATHMATCH', 'Path', 'FileSize', 'LastModified', 'LastAccessed', 'Created', 'HASH'])  
+
+#starts walking desired dir
+for currentRoot, dirList, fileList in os.walk(DIR):
+
+    for nextFile in fileList:
+        
+        #gets absoulte file path
+        fullPath = os.path.join(currentRoot, nextFile)
+        absPath = os.path.abspath(fullPath)        
+        success, errInfo, fileSize, macList = GetFileMetaData(absPath)
+        
+        #makes sure all of the occurences are matched, regardless of case
+        #if match, var = true
+        #if not match, var = false
+        if extSearch.lower() in absPath.lower():
+            extMatch = 'Yes'
+        else:
+            extMatch = 'No'
+            
+        if pathSearch.lower() in absPath.lower():
+            pathMatch = 'Yes'
+        else:
+            pathMatch = 'No'
+            
+        #opens file in read binary mode to get the hash value
+        with open(absPath, 'rb') as targetFile:
+            fileContents = targetFile.read()
+            hashObj = hashlib.sha256()
+            hashObj.update(fileContents)
+            hexDigest = hashObj.hexdigest()
+            if hexDigest == hashSearch:
+                hashMatch = 'Yes'
+            else:
+                hashMatch = 'No'
+                
+        #prints only files that match with the given search criteria
+        if hashMatch == 'Yes' or extMatch == 'Yes' or pathMatch == 'Yes':
+            tbl.add_row( [ hashMatch, extMatch, pathMatch, absPath, fileSize, macList[0], macList[1], macList[2], hexDigest ] ) 
+
+tbl.align = "l" # align the columns left justified
+
+# displays the table
+print (tbl.get_string(sortby="FileSize", reversesort=True))
+
+
+print("\nScript-End\n")
