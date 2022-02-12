@@ -1,0 +1,220 @@
+'''
+Script:  Week 6 Assignment
+Author:  Mike Sword
+Date:    Feb 2021
+Version: .007
+Purpose: Logging of script activities that reports Information, Warnings and Critical Information based on additional logging events
+'''
+
+#Import libraries
+from contextlib import closing                      # import the closing method from the context library
+from socket import socket, AF_INET, SOCK_DGRAM      # import needed methods and attributes from the socket library
+from binascii import hexlify
+
+import sys    # import sys library
+import os     # standard OS Libary
+import struct # import struct library
+import time   # import the time library
+import hashlib  # Python standard library hashlib
+import logging 
+
+from prettytable import PrettyTable     # pip install prettytable
+
+''' 
+-- Directions For Assignment --
+This week you will work again with the NetwrokTime-Experimental script. \You will then add detailed Cyber Operations Logging to the script 
+using SampleLogging.py as a reference.  Your log file should include information, warnings and critical information based on your additional 
+logging events. For example, if you cannot open a file, raise an informational logging event. If you encounter a hash, file name, or extension 
+match, raise a critical logging event.
+'''
+
+# Psuedo Constants
+NTP_PACKET_FORMAT = "!12I"    # defines the expected format of the receive packet from pool.ntp.org
+NTP_DELTA = 2208988800        # For Windows 1970-01-01 00:00:00 epoch value
+NTP_QUERY = b'\x1b'+47*b'\00' # 1b hex followed by 47 00 bytes
+
+SECONDS       = 10            # Offsets into the response buffer
+MICRO_SECONDS = 11
+
+URL      = "pool.ntp.org"     # URL to the Pool of synchronized NTP Servers
+PORT     = 123                # NTP Protocol Port Number
+
+userDIR = input("Enter directory: ")
+extSearch = input("Enter a File Extension to match: ")
+pathSearch = input("Enter a Filename to match: ")
+hashSearch = input("Enter a hash value to match: ")
+
+''' Local Functions '''
+def GetFileMetaData(fileName):
+    
+    ''' 
+        obtain filesystem metadata
+        from the specified file
+        specifically, fileSize and MAC Times
+        
+        return True, None, fileSize and MacTimeList
+    '''
+    
+    try:
+        
+        metaData         = os.stat(fileName)       # Use the stat method to obtain meta data
+        fileSize         = metaData.st_size         # Extract fileSize and MAC Times
+        timeLastAccess   = metaData.st_atime
+        timeLastModified = metaData.st_mtime
+        timeCreated      = metaData.st_ctime
+        
+        modTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeLastModified))
+        accTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeLastAccess))               
+        creTime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(timeCreated))
+        
+        macTimeList = [modTime, accTime, creTime] # Group the MAC Times in a List
+        
+        return True, None, fileSize, macTimeList
+    
+    except Exception as err:
+        return False, str(err), None, None
+
+
+# Turns on logging and creates a log in this Script's directory, naming it "ScriptLog.txt"
+logging.basicConfig(filename='ScriptLog.txt',level=logging.DEBUG,format='%(asctime)s - %(process)d- %(levelname)s- %(message)s')
+logging.info (' ---------- Start of New Log ---------- ')
+
+
+# Get Network Time
+print("_" * 60, "\n")
+print("\nGetting Network Time..... \n")
+logging.info("Contacting pool.ntp.org for Network Time...")
+
+with closing(socket( AF_INET, SOCK_DGRAM)) as s:  # Open a Socket and close automatically once completed
+    s.sendto(NTP_QUERY, (URL, PORT))              # Send the NTP Query to pool.ntp.org     
+    msg, address = s.recvfrom(1024)               # Wait for the response
+    
+    # unpack the results using struct and the known format
+    # which is Big Endian (!) 12 Unsigned Integers (4 bytes each)
+    unpackedResponse = struct.unpack(NTP_PACKET_FORMAT, msg[0:struct.calcsize(NTP_PACKET_FORMAT)])
+
+'''
+For our purpose the unpacked response values 
+offset[10] = Seconds
+offset[11] = MicroSeconds
+'''
+
+seconds       = float(unpackedResponse[SECONDS])
+microseconds  = float(unpackedResponse[MICRO_SECONDS]) / 2**32
+
+'''
+to calcuate the final epoch value we need to 
+combine the seconds and microseconds and deduct the NTP_DELTA
+note, the NTP Delta for Windows is the epoch value from January 1, 1970
+'''
+epoch    = seconds + microseconds - NTP_DELTA
+
+timeValue     = time.gmtime(epoch)           # Convert to UTC Time Value
+                                             # Then convert to human readable form
+humanReadable = time.strftime("%m/%d/%Y %H:%M:%S UTC", timeValue)
+
+print("Current Network Time is: " + humanReadable)   # Prints Human Readable Network Time
+print("_" * 60, "\n")
+logging.info("Current Network Time: " + humanReadable)
+
+
+
+
+# User Directory Entry Validation
+try:
+    print("_" * 60, "\n")
+    print("\nUser Directory Entry Test -------> ")
+    logging.info("User Directory Entry Test Started ")
+    if os.path.isdir(userDIR):
+        absPath = os.path.abspath(userDIR)
+        if os.access(absPath, os.R_OK):
+            print("\nDirectory: " + absPath + " is valid and readable")
+            logging.info("Directory: " + absPath + " is valid and readable")
+            entryList = os.listdir(absPath)
+            print("_" * 60, "\n")
+            print("\nEntries in Directory:\n")
+            logging.info("Entries in Directory:")
+            for eachEntry in entryList:
+                print(eachEntry)
+                logging.info(eachEntry)
+        else:
+            print("Directory: " + abspath + " is valid but we do not have read access")
+            logging.error('Access Denied for ' + abspath + '. Get Permission...')
+    else:
+        print("Directory: ", userDIR, " **** Invalid Directory")
+        logging.error('The Directory: ' + userDIR + ' does not exist.')
+    
+except Exception as err:
+    print("\nException: ", str(err))
+    print("\n0h n0")
+    print("\nAccess Denied for " + absPath)
+    logging.error('Access Denied for ' + abspath)
+
+
+# Walking the directory, after grabbing network time and validating input from user
+print("_" * 60, "\n")
+print("\nWalking: ", userDIR, "\n")
+print("Searching for: ")
+print("\t\tPath: ", pathSearch)
+print("\t\tExt:  ", extSearch)
+print("\t\tHash: ", hashSearch)
+print("_" * 60, "\n")
+
+# Creates a pretty table
+tbl = PrettyTable(['HASHMATCH', 'EXTMATCH', 'PATHMATCH', 'Path', 'FileSize', 'LastModified', 'LastAccessed', 'Created', 'MD5-HASH'])  
+
+for currentRoot, dirList, fileList in os.walk(userDIR):
+
+    for nextFile in fileList:
+        
+        #gets absoulte file path
+        fullPath = os.path.join(currentRoot, nextFile)
+        absPath = os.path.abspath(fullPath)        
+        success, errInfo, fileSize, macList = GetFileMetaData(absPath)
+        
+        # Checks if all occurences are matched, regardless of case
+        if extSearch.lower() in absPath.lower():
+            extMatch = 'Yes'
+        else:
+            extMatch = 'No'
+            
+        if pathSearch.lower() in absPath.lower():
+            pathMatch = 'Yes'
+        else:
+            pathMatch = 'No'
+            
+        #opens file in read binary mode to get the hash value
+        try:
+            with open(absPath, 'rb') as targetFile:
+                fileContents = targetFile.read()
+                hashObj = hashlib.sha256()
+                hashObj.update(fileContents)
+                hexDigest = hashObj.hexdigest()
+                if hexDigest == hashSearch:
+                    hashMatch = 'Yes'
+                else:
+                    hashMatch = 'No'
+                    
+            # Prints only files that match with the given search criteria
+            if hashMatch == 'Yes' or extMatch == 'Yes' or pathMatch == 'Yes':
+                tbl.add_row( [ hashMatch, extMatch, pathMatch, absPath, fileSize, macList[0], macList[1], macList[2], hexDigest ] )
+            
+            # Logs only files that match the given search criteria
+            if hashMatch == 'Yes':
+                logging.critical('Given Hash: "' + hashSearch + '" Matched for ' + fullPath + '!')
+            if extMatch == 'Yes':
+                logging.critical('Given File Extension: "' + extSearch + '" Matched for ' + fullPath + '!')
+            if pathMatch == 'Yes':
+                logging.critical('Given File Path: "' + pathSearch + '" Matched for ' + fullPath + '!')
+            
+        except Exception as err:
+            print("\nException: ", str(err))
+            print("oh no")
+            logging.error('Access Denied for ' + absPath + '. Get Permission and try again...')
+            
+
+tbl.align = "l" # align the columns left justified
+
+# displays the table
+print ('\n')
+print (tbl.get_string(sortby="FileSize", reversesort=True))
