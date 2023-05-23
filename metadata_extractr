@@ -1,12 +1,3 @@
-'''
-Script:  First Script
-Author:  Mike Sword
-Date:    January 2021
-Version: .007
-Purpose: File Metadata Extractr
-
-'''
-
 ''' IMPORT STANDARD LIBRARIES '''
 import os       # File System Methods
 import sys      # System Methods
