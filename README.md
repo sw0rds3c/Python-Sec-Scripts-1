@@ -12,6 +12,4 @@
 
 6 - filesys_photo_search
 
-7 - hash_passsword_list_with_bcrypt.py
-
-
+7 - hash_passsword_list_with_bcrypt.py   ***--showcase--***
