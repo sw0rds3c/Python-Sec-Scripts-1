@@ -1,15 +1,8 @@
-'''
-Script:  Week 6 Assignment
-Author:  Mike Sword
-Date:    Feb 2021
-Version: .007
-Purpose: Logging of script activities that reports Information, Warnings and Critical Information based on additional logging events
-'''
-
 #Import libraries
 from contextlib import closing                      # import the closing method from the context library
 from socket import socket, AF_INET, SOCK_DGRAM      # import needed methods and attributes from the socket library
 from binascii import hexlify
+from prettytable import PrettyTable     # pip install prettytable
 
 import sys    # import sys library
 import os     # standard OS Libary
@@ -17,16 +10,6 @@ import struct # import struct library
 import time   # import the time library
 import hashlib  # Python standard library hashlib
 import logging 
-
-from prettytable import PrettyTable     # pip install prettytable
-
-''' 
--- Directions For Assignment --
-This week you will work again with the NetwrokTime-Experimental script. \You will then add detailed Cyber Operations Logging to the script 
-using SampleLogging.py as a reference.  Your log file should include information, warnings and critical information based on your additional 
-logging events. For example, if you cannot open a file, raise an informational logging event. If you encounter a hash, file name, or extension 
-match, raise a critical logging event.
-'''
 
 # Psuedo Constants
 NTP_PACKET_FORMAT = "!12I"    # defines the expected format of the receive packet from pool.ntp.org
@@ -116,9 +99,6 @@ humanReadable = time.strftime("%m/%d/%Y %H:%M:%S UTC", timeValue)
 print("Current Network Time is: " + humanReadable)   # Prints Human Readable Network Time
 print("_" * 60, "\n")
 logging.info("Current Network Time: " + humanReadable)
-
-
-
 
 # User Directory Entry Validation
 try:
