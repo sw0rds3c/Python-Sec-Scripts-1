@@ -1,4 +1,4 @@
-# Introduction to Security Scripting w/ Python
+# Python Sec Scripts 1
 
 1 - metadata_extractr
 
