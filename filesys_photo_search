@@ -9,8 +9,8 @@ from PIL.ExifTags import TAGS, GPSTAGS
 
 
 # Psuedos
-DIR = input("Enter directory: ")
 '''change as needed or keep prompt'''
+DIR = input("Enter directory: ")
 
 # Photo Search
 cnt = 0 # Files processed
