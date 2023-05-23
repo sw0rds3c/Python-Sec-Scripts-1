@@ -1,33 +1,3 @@
-'''
-Script:  Week 3 Scripting Assignment
-Author:  Mike Sword
-Date:    Feb 2021
-Version: .007
-Purpose: Directory Metadata and Hashing
-
-ASSIGNMENT DETAILS
-Create a new script with the following requirements:
-Allow the user to specify a starting directory using the built-in Python input() function
-
-Using os.walk()
-Acquire the following information for each file (sub-directories included):
-File Path (absolute path)
-File Size
-MAC Times (in human readable form)
-SHA-256 Hash value
-
-Store the results in a prettytable with the headings:
-AbsPath, FileSize, LastModified, LastAccess, CreatedTime, HASH
-
-Display the prettytable sorted by FileSize
-Catch and report any errors
-
-Submit:
-1) Your final script
-2) A screenshot from within WingIDE of a successful execution
-    
-'''
-
 ''' IMPORT STANDARD LIBRARIES '''
 import os       # File System Methods
 import sys      # System Methods
@@ -40,7 +10,7 @@ from prettytable import PrettyTable # pip install prettytable
 
 ''' DEFINE PSEUDO CONSTANTS '''
 #Change to directory as required
-DIR = "c:/users/administrator/desktop/cybv312 sp21"
+DIR = ""
 
 ''' LOCAL FUNCTIONS '''
 
