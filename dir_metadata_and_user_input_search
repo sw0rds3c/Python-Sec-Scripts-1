@@ -1,11 +1,3 @@
-'''
-Script:  Week 4 Assignment
-Author:  Mike Sword
-Date:    Feb 2021
-Version: .007
-Purpose: Combining week3 material with searching from user input (based on file type, size, and hash value)
-'''
-
 ''' STANDARD LIBRARIES ''' 
 import os       # File System Methods
 import sys      # System Methods
