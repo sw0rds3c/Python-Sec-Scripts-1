@@ -1,28 +1,8 @@
-'''
-Script:  Week 5 Assignment
-Author:  Mike Sword
-Date:    Feb 2021
-Version: .007
-Purpose: Making a "Dynamic" Rainbow Table
-'''
-
 ''' Libraries ''' 
-
 import itertools as iT    # Library to run through all combinations, permutations, and products of a password
 import pickle as pK       # Library to serialize objects to store or transmit data to mem, db, file, etc.
 import hashlib as hL      # Hashing Library
 from prettytable import PrettyTable as pT     # pip install prettytable
-
-''' 
--- Directions For Assignment --
-
-1. Using the following limited string of characters 'abc123&&'
-   Create a "dynamic" rainbow table of all passwords 4 to 7 characters in length, along with the md5 hash of each password.  --done
-2. Store them into a Python dictionary. --done
-3. Serialize the resulting table and store it in a file 'rainbow.db' --done
-4. Display the first 5 and last 5 entries in the dictionary along with the length of the dictionary. --done
-
-'''
 
 # Creates file for db dump destination (write binary) labeled 'rainbow.db'
 pKFileWrite = open('rainbow.db', 'wb')
