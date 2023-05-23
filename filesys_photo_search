@@ -1,11 +1,3 @@
-'''
-Script:  Week 7 Assignment
-Author:  Mike Sword
-Date:    Feb 2021
-Version: .007
-Purpose: Searches filesystem for photos and dumps info to csv and json.
-'''
-
 # Import Libraries
 import sys
 import os
@@ -18,20 +10,14 @@ from PIL.ExifTags import TAGS, GPSTAGS
 
 # Psuedos
 DIR = input("Enter directory: ")
-'''c:/users/administrator/desktop/cybv312 sp21/week7'''
-
-'''
-1
-'''
+'''change as needed or keep prompt'''
 
 # Photo Search
-
 cnt = 0 # Files processed
 photoDict = {}
 tbl = PrettyTable(['File', 'Ext', 'Format', 'Width', 'Height', 'Mode', 'ERR'])
 fileList = os.walk(DIR)
     
-
 for currentRoot, dirList, fileList in os.walk(DIR):
     
     outFile0write = open("results.csv", 'w', newline='')
@@ -52,23 +38,18 @@ for currentRoot, dirList, fileList in os.walk(DIR):
             cnt += 1
             ext = os.path.splitext(absPath)[1]
 
-            
             try:
-                                  
-                
                 with Image.open(absPath) as im:
                     if (im.format.upper() == ext[1:].upper()) or (im.format == 'JPEG' and ext.lower() == '.jpg'):
                         error1 = ' '
                     else:
                         error1 = '*'
-                        
-                        
+                      
                     tbl.add_row([absPath, ext, im.format, im.size[0], im.size[1], im.mode, error1]) 
                         
                     reportWriter.writerow([absPath, ext, im.format, im.size[0], im.size[1], im.mode, error1])
                     photoDict[absPath] = [ext, im.format, im.size[0], im.size[1], im.mode, error1]  
-                
-                    
+           
             except Exception as err:
                 tbl.add_row([absPath, ext, "[NA]", "[NA]", "[NA]", "[NA]", "[NA]"])  
                 
